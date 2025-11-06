@@ -26,5 +26,5 @@ def assemble_context(snippets: List[Dict], max_chars: int = 2000) -> str:
 def build_prompt(question: str, contexts: List[Dict]) -> str:
     """Build an augmented prompt for the LLM using retrieved contexts."""
     context_str = assemble_context(contexts)
-    prompt = f"Use the following extracted context to answer the question. If the answer is not contained within the context, say you don't know.\n\nContext:\n{context_str}\n\nQuestion: {question}\n\nAnswer:"
+    prompt = f"Use the following extracted context to answer the question. If the answer is not contained within the context, ignore it and respond accordingly.\n\nContext:\n{context_str}\n\nQuestion: {question}\n\nAnswer:"
     return prompt

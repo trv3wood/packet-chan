@@ -3,17 +3,13 @@
 Uses sentence-transformers to produce embeddings and Chromadb to store them.
 """
 from typing import List, Dict, Any
-import os
 
 import chromadb
-from chromadb.utils import embedding_functions
 from sentence_transformers import SentenceTransformer
 
 
 class VectorStore:
-    def __init__(self, persist_directory: str = "./chroma_db", collection_name: str = "rag_collection"):
-        os.makedirs(persist_directory, exist_ok=True)
-        self.persist_directory = persist_directory
+    def __init__(self, collection_name: str = "rag_collection"):
         self.client = chromadb.Client()
         self.collection = None
         self.collection_name = collection_name

@@ -25,8 +25,14 @@ def extract_text_from_docx(path: str) -> str:
     return "\n\n".join(paragraphs)
 
 
-def extract_text_from_file(path: str) -> str:
-    _, ext = os.path.splitext(path.lower())
+def extract_text_from_file(path: str, original_filename: str = None) -> str:
+    """Extract text from file, using original filename extension if provided."""
+    # Use original filename extension if available, otherwise use path extension
+    if original_filename:
+        _, ext = os.path.splitext(original_filename.lower())
+    else:
+        _, ext = os.path.splitext(path.lower())
+    
     if ext in (".txt", ".md"):
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             return f.read()
@@ -61,7 +67,13 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[st
 def save_uploaded_file(uploaded_file, dst_dir: str) -> str:
     """Given a Streamlit UploadedFile-like object, write to a temp file and return path."""
     os.makedirs(dst_dir, exist_ok=True)
-    fd, path = tempfile.mkstemp(prefix="upload_", dir=dst_dir, suffix="_file")
+    
+    # Preserve original file extension in the temporary filename
+    original_name = uploaded_file.name
+    _, original_ext = os.path.splitext(original_name)
+    
+    # Create temp file with original extension
+    fd, path = tempfile.mkstemp(prefix="upload_", dir=dst_dir, suffix=original_ext)
     os.close(fd)
     with open(path, "wb") as f:
         f.write(uploaded_file.getbuffer())

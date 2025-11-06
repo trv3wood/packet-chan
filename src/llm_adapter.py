@@ -18,14 +18,14 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 
 def generate_with_ollama(prompt: str, model: Optional[str] = None, timeout: int = 60) -> str:
     model = model or OLLAMA_MODEL
-    # Uses `ollama generate <model> --prompt '<prompt>'`
-    # If your local Ollama setup differs, update this command.
-    cmd = ["ollama", "generate", model, "--prompt", prompt]
+    # Uses `ollama run <model> '<prompt>'`
+    # The prompt is passed as an argument to the run command
+    cmd = ["ollama", "run", model, prompt]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, encoding='utf-8')
         if proc.returncode != 0:
             raise RuntimeError(f"Ollama error: {proc.stderr}")
-        return proc.stdout.strip()
+        return proc.stdout
     except FileNotFoundError:
         raise RuntimeError("`ollama` CLI not found. Install Ollama and ensure `ollama` is on your PATH.")
 

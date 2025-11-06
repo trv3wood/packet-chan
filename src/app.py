@@ -4,25 +4,25 @@ from dotenv import load_dotenv
 import os
 import uuid
 
-from src.ingest import save_uploaded_file, extract_text_from_file, chunk_text
-from src.vector_store import VectorStore
-from src.retriever import build_prompt
-from src.llm_adapter import generate
+from ingest import save_uploaded_file, extract_text_from_file, chunk_text
+from vector_store import VectorStore
+from retriever import build_prompt
+from llm_adapter import generate
 
 load_dotenv()
 
-CHROMA_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+# CHROMA_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
 
 
 @st.cache_resource
 def get_store():
-    return VectorStore(persist_directory=CHROMA_DIR)
+    return VectorStore()
 
 
 def ingest_and_index(uploaded_file):
     tmpdir = os.path.join(".", "uploads")
     path = save_uploaded_file(uploaded_file, tmpdir)
-    text = extract_text_from_file(path)
+    text = extract_text_from_file(path, uploaded_file.name)
     chunks = chunk_text(text)
     docs = []
     for i, c in enumerate(chunks):
@@ -52,6 +52,7 @@ def main():
     if st.button("Ask") and question:
         store = get_store()
         hits = store.query(question, k=k)
+        print(hits)
         prompt = build_prompt(question, hits)
         with st.spinner("Generating answer..."):
             try:
