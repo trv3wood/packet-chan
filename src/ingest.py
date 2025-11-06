@@ -9,6 +9,7 @@ import tempfile
 
 from PyPDF2 import PdfReader
 import docx
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def extract_text_from_pdf(path: str) -> str:
@@ -45,22 +46,24 @@ def extract_text_from_file(path: str, original_filename: str = None) -> str:
 
 
 def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
-    """Naive sliding window chunker by characters.
+    """LangChain RecursiveCharacterTextSplitter for intelligent text chunking.
 
     Returns list of text chunks.
     """
     if not text:
         return []
-    chunks = []
-    start = 0
-    length = len(text)
-    while start < length:
-        end = min(start + chunk_size, length)
-        chunk = text[start:end]
-        chunks.append(chunk)
-        if end == length:
-            break
-        start = end - overlap
+    
+    # Create text splitter with the same parameters as the original function
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap,
+        length_function=len,
+        separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]
+    )
+    
+    # Split the text into chunks
+    chunks = text_splitter.split_text(text)
+    print(chunks)
     return chunks
 
 
