@@ -7,7 +7,7 @@ from typing import List
 import os
 import tempfile
 
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 import docx
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
