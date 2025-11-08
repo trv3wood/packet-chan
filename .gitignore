@@ -7,4 +7,3 @@ chroma_db/
 dist/
 build/
 *.log
-uploads/
