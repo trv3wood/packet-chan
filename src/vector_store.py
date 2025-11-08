@@ -18,7 +18,7 @@ class VectorStore:
         self.collection = None
         self.collection_name = collection_name
         # local embedding model
-        self.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.embed_model = SentenceTransformer("BAAI/bge-base-zh-v1.5")
         self._ensure_collection()
 
     def _ensure_collection(self):
