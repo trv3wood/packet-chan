@@ -5,10 +5,10 @@ import os
 import uuid
 import time
 
-from src.ingest import save_uploaded_file, extract_text_from_file, chunk_text
-from src.vector_store import VectorStore
-from src.retriever import build_prompt
-from src.llm_adapter import generate, get_llm_status
+from ingest import save_uploaded_file, extract_text_from_file, chunk_text
+from vector_store import VectorStore
+from retriever import build_prompt
+from llm_adapter import generate, get_llm_status
 
 load_dotenv()
 
