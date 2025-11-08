@@ -141,13 +141,13 @@ def ingest_and_index(uploaded_files):
 
 
 def main():
-    st.title("RAG Chat — Streamlit + Chroma + Kimi/Ollama")
+    st.title("RAG Chat — Streamlit + Chroma + OpenAI-Compat/Ollama")
     
     # 显示 LLM 服务状态（在侧边栏顶部）
     llm_status = get_llm_status()
     with st.sidebar:
         st.header("LLM 服务状态")
-        if llm_status["current_service"] == "Kimi (Moonshot AI)":
+        if llm_status["current_service"] == "OpenAI-compatible API":
             st.success(f"✅ **当前使用: {llm_status['current_service']}**")
             st.write(f"模型: {llm_status['current_model']}")
             if llm_status["fallback_service"] != "无":
@@ -157,22 +157,22 @@ def main():
             st.write(f"模型: {llm_status['current_model']}")
         else:
             st.error(f"❌ **{llm_status['current_service']}**")
-            st.warning("请配置 Kimi API 或确保 Ollama 正在运行")
+            st.warning("请配置 openai-compatible API 或确保 Ollama 正在运行")
         
         # Display configuration details
         with st.expander("📋 配置详情"):
-            st.write(f"**Kimi:** {'✅ 已配置' if llm_status['kimi_configured'] else '❌ 未配置'}")
-            if not llm_status['kimi_configured']:
+            st.write(f"**openai-compatible:** {'✅ 已配置' if llm_status['openai_configured'] else '❌ 未配置'}")
+            if not llm_status['openai_configured']:
                 st.write("缺少的配置:")
-                if not llm_status.get('kimi_api_key_set', False):
-                    st.write("  - ❌ KIMI_API_KEY")
+                if not llm_status.get('openai_api_key_set', False):
+                    st.write("  - ❌ OPENAI_COMPATIBLE_API_KEY")
                 st.write("")
                 st.write("💡 **解决方法:**")
                 st.write("1. 在项目根目录创建 `.env` 文件")
                 st.write("2. 添加以下配置:")
                 st.code("""
-KIMI_API_KEY=你的API密钥
-KIMI_MODEL=moonshot-v1-8k
+OPENAI_COMPATIBLE_API_KEY=你的API密钥
+OPENAI_COMPATIBLE_MODEL=<model name>
                 """, language="env")
             st.write(f"**Ollama:** {'✅ 可用' if llm_status['ollama_available'] else '❌ 不可用'}")
         
@@ -300,7 +300,7 @@ KIMI_MODEL=moonshot-v1-8k
                 total_time = time.time() - start_time
                 
                 # 显示使用的服务
-                if service_used == "Kimi (Moonshot AI)":
+                if service_used == "openai-compatible (Moonshot AI)":
                     st.success(f"✅ 使用服务: {service_used}")
                 elif "Ollama" in service_used:
                     st.info(f"ℹ️ 使用服务: {service_used}")

@@ -24,7 +24,7 @@ except ImportError:
 
 # Try to import the LangChain text splitter; provide a lightweight fallback if unavailable.
 try:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 except Exception:
     warnings.warn(
         "langchain not available or RecursiveCharacterTextSplitter import failed; "
@@ -190,7 +190,7 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[st
     
     # Split the text into chunks
     chunks = text_splitter.split_text(text)
-    print(chunks)
+    # print(chunks)
     return chunks
 
 

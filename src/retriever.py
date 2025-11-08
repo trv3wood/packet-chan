@@ -112,7 +112,7 @@ def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = Fals
         contexts = rerank_results(question, contexts)
     
     context_str = assemble_context(contexts)
-    prompt = f"""根据上下文回答问题。如果上下文没有答案，说"我不知道"。
+    prompt = f"""根据上下文回答问题。如果上下文没有答案，忽略之并回答
 
 上下文：
 {context_str}
