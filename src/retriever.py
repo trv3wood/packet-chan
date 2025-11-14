@@ -59,7 +59,7 @@ def assemble_context(snippets: List[Dict], max_chars: int = 2000, min_similarity
     return result
 
 
-def rerank_results(question: str, hits: List[Dict], top_k: int = None) -> List[Dict]:
+def rerank_results(question: str, hits: List[Dict], top_k: int | None = None) -> List[Dict]:
     """使用简单的关键词匹配重排序结果
     
     这是一个简单的重排序方法，可以根据问题中的关键词对结果进行重新排序
@@ -99,23 +99,33 @@ def rerank_results(question: str, hits: List[Dict], top_k: int = None) -> List[D
     return scored_hits
 
 
-def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = False) -> str:
-    """Build an augmented prompt for the LLM using retrieved contexts.
+def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = False, conversation_history: List[Dict] | None = None) -> str:
+    """Build an augmented prompt for the LLM using retrieved contexts and conversation history.
     
     Args:
         question: 用户问题
         contexts: 检索到的上下文片段
         use_reranking: 是否使用重排序
+        conversation_history: 对话历史，格式为 [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, ...]
     """
     # 可选：使用重排序
     if use_reranking:
         contexts = rerank_results(question, contexts)
     
     context_str = assemble_context(contexts)
-    prompt = f"""根据上下文回答问题。如果上下文没有答案，忽略之并回答
+    
+    # 构建对话历史部分
+    history_str = ""
+    if conversation_history:
+        history_str = "\n\n对话历史：\n"
+        for msg in conversation_history[-6:]:  # 只保留最近6轮对话
+            role = "用户" if msg["role"] == "user" else "助手"
+            history_str += f"{role}: {msg['content']}\n"
+    
+    prompt = f"""根据上下文和对话历史回答问题。如果上下文没有答案，忽略之并回答
 
 上下文：
-{context_str}
+{context_str}{history_str}
 
 问题：{question}
 

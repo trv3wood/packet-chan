@@ -13,8 +13,8 @@ load_dotenv()
 
 # OpenAI-compatible API 配置
 OPENAI_COMPATIBLE_API_KEY = os.getenv("OPENAI_COMPATIBLE_API_KEY")
-OPENAI_COMPATIBLE_API_URL = os.getenv("OPENAI_COMPATIBLE_API_URL", "https://api.openai.com/v1/chat/completions")
-OPENAI_COMPATIBLE_MODEL = os.getenv("OPENAI_COMPATIBLE_MODEL", "gpt-3.5-turbo")
+OPENAI_COMPATIBLE_API_URL = os.getenv("OPENAI_COMPATIBLE_API_URL")
+OPENAI_COMPATIBLE_MODEL = os.getenv("OPENAI_COMPATIBLE_MODEL")
 
 # Ollama 配置（作为回退）
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
@@ -70,92 +70,50 @@ def get_llm_status() -> dict:
     }
 
 
-def generate_with_openai(prompt: str, model: Optional[str] = None, timeout: int = 60) -> str:
-    """使用 OpenAI-compatible API 生成回答
-    
-    API 文档参考：https://platform.openai.com/docs/api-reference/chat
-    """
+def generate_with_oai_compat(prompt: str, model: Optional[str] = None, timeout: int = 60) -> str:
+    """使用 OpenAI-compatible API 生成回答"""
+    from openai import OpenAI
     if not OPENAI_COMPATIBLE_API_KEY:
         raise RuntimeError("OpenAI-compatible API 配置不完整。请设置 OPENAI_COMPATIBLE_API_KEY")
     
-    try:
-        import urllib.request
-        import urllib.error
-        import json
-    except ImportError:
-        raise RuntimeError("urllib 库不可用")
-    
+    # 使用配置的模型或默认模型
     model = model or OPENAI_COMPATIBLE_MODEL
-    api_url = OPENAI_COMPATIBLE_API_URL
+    if not model:
+        raise ValueError("no model specified")
     
-    # 构建请求头
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {OPENAI_COMPATIBLE_API_KEY}'
-    }
-    
-    # 构建请求体（OpenAI 标准格式）
-    data = {
-        "model": model,
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        "temperature": 0.7,
-        "max_tokens": 2048
-    }
-    
-    debug_print("=" * 60)
-    debug_print("开始调用 OpenAI-compatible API")
-    debug_print(f"URL: {api_url}")
-    debug_print(f"Model: {model}")
-    debug_print(f"Prompt 长度: {len(prompt)} 字符")
-    
-    # 发送 HTTP 请求
-    req = urllib.request.Request(
-        api_url,
-        data=json.dumps(data).encode('utf-8'),
-        headers=headers,
-        method='POST'
-    )
+    debug_print(f"使用 OpenAI-compatible API 调用模型: {model}")
+    debug_print(f"API URL: {OPENAI_COMPATIBLE_API_URL}")
     
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            
-            debug_print("收到响应:")
-            debug_print(json.dumps(result, ensure_ascii=False, indent=2))
-            
-            # 检查错误
-            if "error" in result:
-                error_message = result.get("error", {}).get("message", "未知错误")
-                raise RuntimeError(f"OpenAI-compatible API 错误: {error_message}")
-            
-            # 提取回答内容
-            choices = result.get("choices", [])
-            if not choices:
-                raise RuntimeError("OpenAI-compatible API 返回了空回答")
-            
-            # 获取第一个 choice 的 message content
-            answer = choices[0].get("message", {}).get("content", "")
-            if not answer:
-                raise RuntimeError("OpenAI-compatible API 返回了空内容")
-            
-            debug_print(f"成功获取回答 (长度: {len(answer)} 字符)")
-            return answer.strip()
-            
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8') if e.fp else "无错误详情"
-        debug_print(f"HTTP 错误响应: {e.code} {e.reason}")
-        debug_print(f"错误详情: {error_body}")
-        raise RuntimeError(f"OpenAI-compatible API HTTP 请求失败: {e.code} {e.reason} - {error_body}")
-            
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"OpenAI-compatible API 连接错误: {e}")
+        # 创建 OpenAI 客户端
+        client = OpenAI(
+            api_key=OPENAI_COMPATIBLE_API_KEY,
+            base_url=OPENAI_COMPATIBLE_API_URL,
+            timeout=timeout
+        )
+        
+        # 调用聊天完成 API
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2048
+        )
+        
+        # 提取回复内容
+        answer = response.choices[0].message.content
+        if not answer:
+            raise RuntimeError("OpenAI-compatible API 返回了空回复")
+        
+        debug_print(f"OpenAI-compatible API 调用成功，回复长度: {len(answer)}")
+        return answer.strip()
+        
     except Exception as e:
-        raise RuntimeError(f"OpenAI-compatible API 错误: {e}")
+        debug_print(f"OpenAI-compatible API 调用失败: {e}")
+        raise RuntimeError(f"OpenAI-compatible API 调用失败: {e}")
+    
 
 
 def generate_with_ollama(prompt: str, model: Optional[str] = None, timeout: Optional[int] = None) -> str:
@@ -209,7 +167,7 @@ def generate(prompt: str, model: Optional[str] = None) -> Tuple[str, str]:
     # 优先使用 OpenAI-compatible API
     if openai_api_key:
         try:
-            answer = generate_with_openai(prompt, model=model)
+            answer = generate_with_oai_compat(prompt, model=model)
             return answer, "OpenAI-compatible API"
         except Exception as e:
             # 如果 OpenAI-compatible API 失败，回退到 Ollama

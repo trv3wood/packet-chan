@@ -143,6 +143,10 @@ def ingest_and_index(uploaded_files):
 def main():
     st.title("RAG Chat — Streamlit + Chroma + OpenAI-Compat/Ollama")
     
+    # 初始化对话历史
+    if 'conversation_history' not in st.session_state:
+        st.session_state.conversation_history = []
+    
     # 显示 LLM 服务状态（在侧边栏顶部）
     llm_status = get_llm_status()
     with st.sidebar:
@@ -177,6 +181,23 @@ OPENAI_COMPATIBLE_MODEL=<model name>
             st.write(f"**Ollama:** {'✅ 可用' if llm_status['ollama_available'] else '❌ 不可用'}")
         
         st.divider()
+        
+        # 对话历史管理
+        st.header("对话历史")
+        st.write(f"当前对话轮数: {len(st.session_state.conversation_history) // 2}")
+        
+        if st.button("🗑️ 清空对话历史", type="secondary"):
+            st.session_state.conversation_history = []
+            st.rerun()
+        
+        # 显示最近的对话历史
+        if st.session_state.conversation_history:
+            with st.expander("📜 查看对话历史"):
+                for i, msg in enumerate(st.session_state.conversation_history[-10:]):  # 显示最近10条
+                    role = "👤 用户" if msg["role"] == "user" else "🤖 助手"
+                    st.write(f"**{role}:**")
+                    st.write(msg["content"])
+                    st.write("---")
     
     st.sidebar.header("Upload")
     st.sidebar.caption("支持上传最多 5 个文件（.txt, .md, .pdf, .docx）")
@@ -230,7 +251,7 @@ OPENAI_COMPATIBLE_MODEL=<model name>
         store = get_store()
         
         # 先检索原始结果（不应用阈值）用于调试
-        raw_hits = store.query(question, k=k * 5, min_similarity=None)
+        raw_hits = store.query(question, k=k * 5, min_similarity=0.0)
         
         # 然后应用阈值过滤
         hits = store.query(question, k=k, min_similarity=min_similarity)
@@ -282,7 +303,7 @@ OPENAI_COMPATIBLE_MODEL=<model name>
                     st.write("---")
         
         prompt_start = time.time()
-        prompt = build_prompt(question, hits)
+        prompt = build_prompt(question, hits, conversation_history=st.session_state.conversation_history)
         prompt_time = time.time() - prompt_start
         
         # 调试：显示完整的 prompt（每次提问都会更新）
@@ -298,6 +319,16 @@ OPENAI_COMPATIBLE_MODEL=<model name>
                 answer, service_used = generate(prompt)
                 generate_time = time.time() - generate_start
                 total_time = time.time() - start_time
+                
+                # 将问题和答案添加到对话历史
+                st.session_state.conversation_history.append({
+                    "role": "user",
+                    "content": question
+                })
+                st.session_state.conversation_history.append({
+                    "role": "assistant", 
+                    "content": answer
+                })
                 
                 # 显示使用的服务
                 if service_used == "openai-compatible (Moonshot AI)":
