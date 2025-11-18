@@ -84,6 +84,9 @@ def generate_with_oai_compat(prompt: str, model: Optional[str] = None, timeout: 
     debug_print(f"使用 OpenAI-compatible API 调用模型: {model}")
     debug_print(f"API URL: {OPENAI_COMPATIBLE_API_URL}")
     
+    # 添加中文回答提示
+    enhanced_prompt = f"请用中文回答以下问题：\n{prompt}"
+    
     try:
         # 创建 OpenAI 客户端
         client = OpenAI(
@@ -96,7 +99,7 @@ def generate_with_oai_compat(prompt: str, model: Optional[str] = None, timeout: 
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": enhanced_prompt}
             ],
             temperature=0.7,
             max_tokens=2048
@@ -122,6 +125,9 @@ def generate_with_ollama(prompt: str, model: Optional[str] = None, timeout: Opti
     host = OLLAMA_HOST or "http://localhost:11434"
     timeout = timeout or OLLAMA_TIMEOUT
     
+    # 添加中文回答提示
+    enhanced_prompt = f"请用中文回答以下问题：\n{prompt}"
+    
     try:
         import urllib.request
         import urllib.error
@@ -130,7 +136,7 @@ def generate_with_ollama(prompt: str, model: Optional[str] = None, timeout: Opti
         url = f"{host}/api/generate"
         data = {
             "model": model,
-            "prompt": prompt,
+            "prompt": enhanced_prompt,
             "stream": False
         }
         
