@@ -1,5 +1,5 @@
 """Retriever: fetch top-k contexts and assemble prompt for LLM."""
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 def assemble_context(snippets: List[Dict], max_chars: int = 2000, min_similarity: float = 0.3) -> str:
@@ -59,7 +59,7 @@ def assemble_context(snippets: List[Dict], max_chars: int = 2000, min_similarity
     return result
 
 
-def rerank_results(question: str, hits: List[Dict], top_k: int | None = None) -> List[Dict]:
+def rerank_results(question: str, hits: List[Dict], top_k: Optional[int] = None) -> List[Dict]:
     """使用简单的关键词匹配重排序结果
     
     这是一个简单的重排序方法，可以根据问题中的关键词对结果进行重新排序
@@ -99,7 +99,7 @@ def rerank_results(question: str, hits: List[Dict], top_k: int | None = None) ->
     return scored_hits
 
 
-def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = False, conversation_history: List[Dict] | None = None) -> str:
+def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = False, conversation_history: Optional[List[Dict]] = None) -> str:
     """Build an augmented prompt for the LLM using retrieved contexts and conversation history.
     
     Args:
@@ -131,3 +131,7 @@ def build_prompt(question: str, contexts: List[Dict], use_reranking: bool = Fals
 
 回答："""
     return prompt
+
+
+# 显式定义要导出的函数
+__all__ = ['assemble_context', 'rerank_results', 'build_prompt']
